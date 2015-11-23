@@ -60,17 +60,19 @@ Below is the default tab bar, renamed to CustomTabBar, you can use this
 as a template for implementing your own.
 
 ```javascript
+'use strict';
+
 var React = require('react-native');
 var {
+  Dimensions,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
+  View,
+  Animated,
 } = React;
 
-var deviceWidth = require('Dimensions').get('window').width;
-var precomputeStyle = require('precomputeStyle');
-var TAB_UNDERLINE_REF = 'TAB_UNDERLINE';
+var deviceWidth = Dimensions.get('window').width;
 
 var styles = StyleSheet.create({
   tab: {
@@ -83,6 +85,7 @@ var styles = StyleSheet.create({
   tabs: {
     height: 50,
     flexDirection: 'row',
+    justifyContent: 'space-around',
     marginTop: 20,
     borderWidth: 1,
     borderTopWidth: 0,
@@ -103,16 +106,12 @@ var CustomTabBar = React.createClass({
     var isTabActive = this.props.activeTab === page;
 
     return (
-      <TouchableOpacity key={name} onPress={() => this.props.goToPage(page)} style={[styles.tab]}>
-        <Text style={{color: isTabActive ? 'navy' : 'black', fontWeight: isTabActive ? 'bold' : 'normal'}}>{name}</Text>
+      <TouchableOpacity style={[styles.tab]} key={name} onPress={() => this.props.goToPage(page)}>
+        <View>
+          <Text style={{color: isTabActive ? 'navy' : 'black', fontWeight: isTabActive ? 'bold' : 'normal'}}>{name}</Text>
+        </View>
       </TouchableOpacity>
     );
-  },
-
-  setAnimationValue(value) {
-    this.refs[TAB_UNDERLINE_REF].setNativeProps(precomputeStyle({
-      left: (deviceWidth * value) / this.props.tabs.length
-    }));
   },
 
   render() {
@@ -125,10 +124,14 @@ var CustomTabBar = React.createClass({
       bottom: 0,
     };
 
+    var left = this.props.scrollValue.interpolate({
+      inputRange: [0, 1], outputRange: [0, deviceWidth / numberOfTabs]
+    });
+
     return (
       <View style={styles.tabs}>
         {this.props.tabs.map((tab, i) => this.renderTabOption(tab, i))}
-        <View style={tabUnderlineStyle} ref={TAB_UNDERLINE_REF} />
+        <Animated.View style={[tabUnderlineStyle, {left}]} />
       </View>
     );
   },
